@@ -13,6 +13,7 @@
 #include <ifaddrs.h>
 
 
+
 struct sockaddr_in serv;
 int sock;
 int con = 1;
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
 
 	int choice=0;
 	while(choice!=4){
-		clrscr();
+
 		printf("\n\tCLIENT MENU");
 		printf("\n\t------------------------------");
 		printf("\n\n\t 1. CHATEAR CON USUARIOS");
@@ -66,10 +67,10 @@ int main(int argc, char* argv[]) {
  
 		switch(choice){
 			case 1:
-			printf("\nCHATEAR CON USUARIOS %c",1);
+			printf("\nCHAT %c",1);
 			break;
 			case 2:
-			printf("\nLISTAR USUARIOS %c",2);
+			printf("\nLISTA DE USUARIOS %c",2);
 			break;
 			case 3:
 			printf("\nAYUDA %c",3);
@@ -80,7 +81,6 @@ int main(int argc, char* argv[]) {
 			otherwise:
 			printf("\nOPCION INVALIDA");
 		}
-		getch();
 	}
 
 }
