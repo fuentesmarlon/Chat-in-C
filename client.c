@@ -50,6 +50,9 @@ int main(int argc, char* argv[]) {
 		printf("INGRESADO COMO USUARIO :%s\n", nickname);
 		printf("SERVER IP :%s\n", sip);
 		printf("CLIENTE IP :%s\n", cip);
+		printf("INGRESADO COMO USUARIO :%s\n", nickname);
+		printf("SERVER IP :%s\n", sip);
+		printf("CLIENTE IP :%s\n", cip);
 		
 		json_object *juser = json_object_new_object();
 		
@@ -64,13 +67,14 @@ int main(int argc, char* argv[]) {
 		char *mes;
 		mes = json_object_to_json_string(juser);
 		printf("%s", mes);
+		send(sock, mes, strlen(mes),0);
+		send(sock, juser, strlen(juser),0);
 		
 		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
 			printf("CONECTANDO");
 			con = 0;
 			exit(0);
 		}
-	
 	}
 
 	int choice=0;
