@@ -50,9 +50,6 @@ int main(int argc, char* argv[]) {
 		printf("INGRESADO COMO USUARIO :%s\n", nickname);
 		printf("SERVER IP :%s\n", sip);
 		printf("CLIENTE IP :%s\n", cip);
-		printf("INGRESADO COMO USUARIO :%s\n", nickname);
-		printf("SERVER IP :%s\n", sip);
-		printf("CLIENTE IP :%s\n", cip);
 		
 		json_object *juser = json_object_new_object();
 		
@@ -68,7 +65,6 @@ int main(int argc, char* argv[]) {
 		mes = json_object_to_json_string(juser);
 		printf("%s", mes);
 		send(sock, mes, strlen(mes),0);
-		send(sock, juser, strlen(juser),0);
 		
 		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
 			printf("CONECTANDO");
@@ -114,27 +110,7 @@ int main(int argc, char* argv[]) {
 			break;
 			
 			case 2:
-			char lista[100] ="";
-			char user[100] ="";
 			printf("\nLISTA DE USUARIOS %c",2);
-			json_object *action = json_object_new_string("LIST_USER");
-			send(sock, action, strlen(action),0);
-			recv(conn,lista, 100,0);
-			printf("%s\n", lista);
-			
-			printf("BUSCAR USUARIO");
-			fgets(user,100,stdin);
-			
-			json_object *juser = json_object_new_object();
-		
-			json_object *action = json_object_new_string("LIST_USER");
-			json_object *user = json_object_new_string(user);
-
-			json_object_object_add(juser,"action",action);
-			json_object_object_add(juser,"to",user);
-			
-			send(sock, juser, strlen(juser),0);
-			}
 			break;
 			
 			case 3:
