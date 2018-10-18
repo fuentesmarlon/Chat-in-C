@@ -1,10 +1,13 @@
 //nos basamos en el siguiente código: https://medium.com/@yashitmaheshwary/simple-chat-server-using-sockets-in-c-f72fc8b5b24e
-
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
 #include <netinet/in.h>
 #include <unistd.h>
 #include <string.h>
 #include <json/json.h>
 #include <arpa/inet.h>
+
 struct sockaddr_in serv;
 int fd;
 int conn;
