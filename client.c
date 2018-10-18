@@ -1,5 +1,3 @@
-//nos basamos en el siguiente código: https://medium.com/@yashitmaheshwary/simple-chat-server-using-sockets-in-c-f72fc8b5b24e
-
 #include <stdio.h>
 #include <sys/socket.h>
 #include <stdlib.h>
@@ -13,10 +11,7 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <ifaddrs.h>
-#include <cjson/cJSON.h>
 #include <json.h>
-
-
 
 
 struct sockaddr_in serv;
@@ -69,6 +64,13 @@ int main(int argc, char* argv[]) {
 		char *mes;
 		mes = json_object_to_json_string(juser);
 		printf("%s", mes);
+		
+		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
+			printf("CONECTANDO");
+			con = 0;
+			exit(0);
+		}
+	
 	}
 
 	int choice=0;
@@ -86,23 +88,60 @@ int main(int argc, char* argv[]) {
 		switch(choice){
 			case 1:
 			printf("\nCHAT %c",1);
+			json_object *jobj = json_object_new_object();
+			char dest[50];
+			printf("destinatario:");
+			scanf("%s",dest);
+			while(1){
+			printf("Enter a message:");
+			scanf(" %[^\n]s",message);
+			json_object *jAction = json_object_new_string("SEND_MESSAGE");
+			json_object *jUser = json_object_new_string(nickname);
+			json_object *jDest = json_object_new_string(dest);
+			json_object *jMessage = json_object_new_string(message);
+			json_object_object_add(jobj,"action",jAction);
+			json_object_object_add(jobj,"from",jUser);
+			json_object_object_add(jobj,"to",jDest);
+			json_object_object_add(jobj,"message",jMessage);
+			char *theMessage;
+			theMessage = json_object_to_json_string(jobj);
+			send(fd, theMessage, strlen(theMessage),0);
+			}			
 			break;
 			
 			case 2:
+			char lista[100] ="";
+			char user[100] ="";
 			printf("\nLISTA DE USUARIOS %c",2);
+			json_object *action = json_object_new_string("LIST_USER");
+			send(sock, action, strlen(action),0);
+			recv(conn,lista, 100,0);
+			printf("%s\n", lista);
 			
+			printf("BUSCAR USUARIO");
+			fgets(user,100,stdin);
+			
+			json_object *juser = json_object_new_object();
+		
+			json_object *action = json_object_new_string("LIST_USER");
+			json_object *user = json_object_new_string(user);
+
+			json_object_object_add(juser,"action",action);
+			json_object_object_add(juser,"to",user);
+			
+			send(sock, juser, strlen(juser),0);
+			}
 			break;
 			
 			case 3:
 			printf("\nAYUDA %c",3);
 			break;
-			
 			case 4:
 			printf("\nSALIR %c",4);
 			exit(0);
-			
 			otherwise:
 			printf("\nOPCION INVALIDA");
 		}
 	}
+
 }
