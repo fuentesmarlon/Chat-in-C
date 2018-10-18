@@ -65,13 +65,14 @@ int main(int argc, char* argv[]) {
 		char *mes;
 		mes = json_object_to_json_string(juser);
 		send(sock, mes, strlen(mes),0);
-		
+		/*
 		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
 			printf("CONECTANDO");
 			con = 0;
 			exit(0);
 		}
 		break;
+		*/
 	}
 
 	int choice=0;
@@ -111,6 +112,7 @@ int main(int argc, char* argv[]) {
 			break;
 			
 			case 2:
+			/*
 			char lista[100] ="";
 			char user[100] ="";
 			printf("\nLISTA DE USUARIOS %c",2);
@@ -137,6 +139,7 @@ int main(int argc, char* argv[]) {
 			theMessage = json_object_to_json_string(juser);
 			send(sock, mes, strlen(mes),0);
 			}
+			*/
 			break;
 			
 			case 3:
