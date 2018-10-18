@@ -11,6 +11,9 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <ifaddrs.h>
+#include <cjson/cJSON.h>
+#include <json.h>
+
 
 
 
@@ -50,7 +53,20 @@ int main(int argc, char* argv[]) {
 		printf("INGRESADO COMO USUARIO :%s\n", nickname);
 		printf("SERVER IP :%s\n", sip);
 		printf("CLIENTE IP :%s\n", cip);
-	
+		
+		json_object *juser = json_object_new_object();
+		
+		json_object *host = json_object_new_string(sip);
+		json_object *origin = json_object_new_string(cip);
+		json_object *user = json_object_new_string(nickname);
+
+		json_object_object_add(juser,"action",host);
+		json_object_object_add(juser,"from",origin);
+		json_object_object_add(juser,"to",user);
+
+		char *mes;
+		mes = json_object_to_json_string(juser);
+		printf("%s", mes);
 	}
 
 	int choice=0;
@@ -69,18 +85,22 @@ int main(int argc, char* argv[]) {
 			case 1:
 			printf("\nCHAT %c",1);
 			break;
+			
 			case 2:
 			printf("\nLISTA DE USUARIOS %c",2);
+			
 			break;
+			
 			case 3:
 			printf("\nAYUDA %c",3);
 			break;
+			
 			case 4:
 			printf("\nSALIR %c",4);
 			exit(0);
+			
 			otherwise:
 			printf("\nOPCION INVALIDA");
 		}
 	}
-
 }
