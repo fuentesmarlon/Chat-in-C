@@ -46,31 +46,24 @@ int main(int argc, char* argv[]) {
 	inet_pton(AF_INET, sip, &serv.sin_addr);
 	connect(sock, (struct sockaddr *)&serv, sizeof(serv));
 
-	if(con = 1){
+	if(con == 1){
 		printf("INGRESADO COMO USUARIO :%s\n", nickname);
 		printf("SERVER IP :%s\n", sip);
 		printf("CLIENTE IP :%s\n", cip);
 		
 		json_object *juser = json_object_new_object();
+
+		json_object *jHost = json_object_new_string(host);
+		json_object *jOrigin = json_object_new_string(cip);
+		json_object *jUser = json_object_new_string(nickname);
+
+		json_object_object_add(juser,"host",jHost);
+		json_object_object_add(juser,"origin",jOrigin);
+		json_object_object_add(juser,"user",jUser);
 		
-		json_object *host = json_object_new_string(sip);
-		json_object *origin = json_object_new_string(cip);
-		json_object *user = json_object_new_string(nickname);
-
-		json_object_object_add(juser,"action",host);
-		json_object_object_add(juser,"from",origin);
-		json_object_object_add(juser,"to",user);
-
 		char *mes;
 		mes = json_object_to_json_string(juser);
-		printf("%s", mes);
 		send(sock, mes, strlen(mes),0);
-		
-		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
-			printf("CONECTANDO");
-			con = 0;
-			exit(0);
-		}
 	}
 
 	int choice=0;
