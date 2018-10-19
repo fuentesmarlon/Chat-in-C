@@ -39,19 +39,20 @@ int main(int argc, char* argv[]) {
 
 	fd = socket(AF_INET, SOCK_DGRAM, 0);
 	ifr.ifr_addr.sa_family = AF_INET;
-	strncpy(ifr.ifr_name, "en0", IFNAMSIZ-1);
+	strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
 	ioctl(fd, SIOCGIFADDR, &ifr);
 	close(fd);
 	cip = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
    
 	inet_pton(AF_INET, sip, &serv.sin_addr);
 	connect(sock, (struct sockaddr *)&serv, sizeof(serv));
-
+	
 	if(con == 1){
-		printf("INGRESADO COMO USUARIO :%s\n", nickname);
-		printf("SERVER IP :%s\n", sip);
-		printf("CLIENTE IP :%s\n", cip);
+		printf("INGRESADO COMO USUARIO: %s\n", nickname);
+		printf("SERVER IP: %s\n", sip);
+		printf("CLIENTE IP: %s\n", cip);
 		
+
 		json_object *juser = json_object_new_object();
 
 		json_object *jHost = json_object_new_string(sip);
@@ -65,14 +66,18 @@ int main(int argc, char* argv[]) {
 		char *mes;
 		mes = json_object_to_json_string(juser);
 		send(sock, mes, strlen(mes),0);
-		/*
+				
 		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
-			printf("CONECTANDO");
+			printf("CONECTADO");
+			bind(sock, (struct sockaddr *)&serv, sizeof(serv));
+			listen(sock,10);
+			recv(conn,message,100,0)>0){
+			printf("Mensaje:%s\n", message);
 			con = 0;
+		}else{
+			printf("CONEXION FALLIDA");
 			exit(0);
 		}
-		break;
-		*/
 	}
 
 	int choice=0;
@@ -92,10 +97,10 @@ int main(int argc, char* argv[]) {
 			printf("\nCHAT %c",1);
 			json_object *jobj = json_object_new_object();
 			char dest[50];
-			printf("destinatario:");
+			printf("INGRESE DESTINATARIO: ");
 			scanf("%s",dest);
 			while(1){
-			printf("Enter a message:");
+			printf("INGRESE MENSAJE: ");
 			scanf(" %[^\n]s",message);
 			json_object *jAction = json_object_new_string("SEND_MESSAGE");
 			json_object *jUser = json_object_new_string(nickname);
@@ -107,17 +112,20 @@ int main(int argc, char* argv[]) {
 			json_object_object_add(jobj,"message",jMessage);
 			char *theMessage;
 			theMessage = json_object_to_json_string(jobj);
-			send(fd, theMessage, strlen(theMessage),0);
+			send(sock, theMessage, strlen(theMessage),0);
 			}			
 			break;
 			
 			case 2:
-			/*
+			
+			printf("\nLISTA DE USUARIOS %c",2);
+			
 			char lista[100] ="";
 			char user[100] ="";
-			printf("\nLISTA DE USUARIOS %c",2);
-			json_object *action = json_object_new_string("LIST_USER");
 			char *mes;
+						
+			json_object *action = json_object_new_string("LIST_USER");
+
 			mes = json_object_to_json_string(action);
 			send(sock, mes, strlen(mes),0);
 			
@@ -128,18 +136,17 @@ int main(int argc, char* argv[]) {
 			fgets(user,100,stdin);
 			
 			json_object *juser = json_object_new_object();
-		
-			json_object *action = json_object_new_string("LIST_USER");
-			json_object *user = json_object_new_string(user);
-
-			json_object_object_add(juser,"action",action);
-			json_object_object_add(juser,"to",user);
 			
-			char *theMessage;
-			theMessage = json_object_to_json_string(juser);
+			*user = json_object_new_string(user);
+			
+			json_object_object_add(juser,"action",action);
+			
+			json_object_object_add(juser,"to",user);
+		
+			mes = json_object_to_json_string(juser);
+			
 			send(sock, mes, strlen(mes),0);
-			}
-			*/
+			
 			break;
 			
 			case 3:
