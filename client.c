@@ -11,13 +11,12 @@
 #include <ifaddrs.h>
 #include <netdb.h>
 #include <ifaddrs.h>
-#include <json.h>
+#include <json/json.h>
 
 
 struct sockaddr_in serv;
 int sock;
-int con = 1;
-int conn;
+int conn, con;
 char message[100]="";
 
 int fd;
@@ -46,8 +45,8 @@ int main(int argc, char* argv[]) {
    
 	inet_pton(AF_INET, sip, &serv.sin_addr);
 	connect(sock, (struct sockaddr *)&serv, sizeof(serv));
-	
-	if(con == 1){
+	if(connect(sock, (struct sockaddr *)&serv, sizeof(serv))){
+		connect(sock, (struct sockaddr *)&serv, sizeof(serv));
 		printf("INGRESADO COMO USUARIO: %s\n", nickname);
 		printf("SERVER IP: %s\n", sip);
 		printf("CLIENTE IP: %s\n", cip);
@@ -63,38 +62,42 @@ int main(int argc, char* argv[]) {
 		json_object_object_add(juser,"origin",jOrigin);
 		json_object_object_add(juser,"user",jUser);
 		
-		char *mes;
-		mes = json_object_to_json_string(juser);
-		send(sock, mes, strlen(mes),0);
-				
+		const char *hand;
+		hand = json_object_to_json_string(juser);
+		send(sock, hand, strlen(hand),0);
+		
+		bind(sock, (struct sockaddr *)&serv, sizeof(serv));
+		listen(sock,10);
+		
 		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
-			printf("CONECTADO");
-			bind(sock, (struct sockaddr *)&serv, sizeof(serv));
-			listen(sock,10);
-			recv(conn,message,100,0)>0){
-			printf("Mensaje:%s\n", message);
-			con = 0;
-		}else{
-			printf("CONEXION FALLIDA");
-			exit(0);
-		}
+			printf("ESPERANDO CONEXION\n");
+			recv(conn,message,100,0);
+			printf("HANDSHAKE:%s\n", message);
+			while(recv(conn,message,100,0)>0){
+					printf("HANDSHAKE:%s\n", message);
+				}
+			}
+	}else{
+		printf("CONEXION FALLIDA\n");
+		exit(0);
 	}
-
+	
 	int choice=0;
-	while(choice!=4){
+	while(choice!=5){
 
 		printf("\n\tCLIENT MENU");
 		printf("\n\t------------------------------");
 		printf("\n\n\t 1. CHATEAR CON USUARIOS");
 		printf("\n\t 2. LISTAR USUARIOS");
-		printf("\n\t 3. AYUDA");
-		printf("\n\t 4. SALIR");
+		printf("\n\t 3. CAMBIAR STATUS");
+		printf("\n\t 4. AYUDA");
+		printf("\n\t 5. SALIR");
 		printf("\n\n INGRESE UNA OPCION: ");
 		scanf("%d", &choice);
  
 		switch(choice){
 			case 1:
-			printf("\nCHAT %c",1);
+			printf("\nCHAT %c\n",1);
 			json_object *jobj = json_object_new_object();
 			char dest[50];
 			printf("INGRESE DESTINATARIO: ");
@@ -110,53 +113,74 @@ int main(int argc, char* argv[]) {
 			json_object_object_add(jobj,"from",jUser);
 			json_object_object_add(jobj,"to",jDest);
 			json_object_object_add(jobj,"message",jMessage);
-			char *theMessage;
+			const char *theMessage;
 			theMessage = json_object_to_json_string(jobj);
 			send(sock, theMessage, strlen(theMessage),0);
 			}			
 			break;
 			
 			case 2:
+			printf("\nLISTA DE USUARIOS %c\n",2);
 			
-			printf("\nLISTA DE USUARIOS %c",2);
+			json_object *jlist = json_object_new_object();
+			json_object *jAction2 = json_object_new_string("LIST_USER");
+			json_object_object_add(jlist,"action",jAction2);
 			
-			char lista[100] ="";
-			char user[100] ="";
-			char *mes;
-						
-			json_object *action = json_object_new_string("LIST_USER");
+			const char *listar;
+			listar = json_object_to_json_string(jlist);
+			send(sock, listar, strlen(listar),0);
+			
+			printf("\nBUSCAR USUARIO %c\n",2);
+			json_object *jbus = json_object_new_object();
+			char user[50];
+			printf("INGRESE USUARIO: ");
+			scanf("%s",user);
 
-			mes = json_object_to_json_string(action);
-			send(sock, mes, strlen(mes),0);
-			
-			recv(conn, lista, 100,0);
-			printf("%s\n", lista);
-			
-			printf("BUSCAR USUARIO");
-			fgets(user,100,stdin);
-			
-			json_object *juser = json_object_new_object();
-			
-			*user = json_object_new_string(user);
-			
-			json_object_object_add(juser,"action",action);
-			
-			json_object_object_add(juser,"to",user);
-		
-			mes = json_object_to_json_string(juser);
-			
-			send(sock, mes, strlen(mes),0);
-			
+			json_object *jUser = json_object_new_string(nickname);
+
+			json_object_object_add(jbus,"action",jAction2);
+			json_object_object_add(jbus,"from",jUser);
+
+			const char *bus;
+			bus = json_object_to_json_string(jbus);
+			send(sock, bus, strlen(bus),0);
 			break;
 			
 			case 3:
-			printf("\nAYUDA %c",3);
+			printf("\nCAMBIAR STATUS %c\n",3);
+			json_object *jstatus = json_object_new_object();
+			json_object *juser = json_object_new_object();
+			json_object *jAction3 = json_object_new_string("CHANGE_STATUS");
+			json_object *jId = json_object_new_string(nickname);
+			json_object *jName = json_object_new_string(nickname);
+			json_object *jStatus = json_object_new_string("busy");
+			
+			json_object_object_add(jstatus,"action",jAction3);
+			json_object_object_add(juser,"id",jId);
+			json_object_object_add(juser,"id",jName);
+			json_object_object_add(juser,"id",jStatus);
+  		  	json_object_object_add(jstatus,"user",juser);
+			
+			const char *change;
+			change = json_object_to_json_string(jstatus);
+			send(sock, change, strlen(change),0);
 			break;
+			
 			case 4:
-			printf("\nSALIR %c",4);
+			printf("\nAYUDA %c\n",4);
+			break;
+			
+			case 5:
+			printf("\nSALIR %c\n",5);
+			const char *bye;
+			bye = "BYE";
+			send(sock, bye, strlen(bye),0);
 			exit(0);
-			otherwise:
-			printf("\nOPCION INVALIDA");
+			
+			default:
+			printf("\nOPCION INVALIDA\n");
+			choice=0;
+			break;
 		}
 	}
 
