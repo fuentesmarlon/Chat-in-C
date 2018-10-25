@@ -18,9 +18,10 @@ struct sockaddr_in serv;
 int sock;
 int conn, con;
 char message[100]="";
-
+int handshake = 0;
 int fd;
 struct ifreq ifr;
+char empty[100] = "";
 
 int main(int argc, char* argv[]) {
 	
@@ -44,12 +45,12 @@ int main(int argc, char* argv[]) {
 	cip = inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
    
 	inet_pton(AF_INET, sip, &serv.sin_addr);
-	connect(sock, (struct sockaddr *)&serv, sizeof(serv));
-	if(connect(sock, (struct sockaddr *)&serv, sizeof(serv))){
-		connect(sock, (struct sockaddr *)&serv, sizeof(serv));
+	
+	if(connect(sock, (struct sockaddr *)&serv, sizeof(serv)) == 0){
 		printf("INGRESADO COMO USUARIO: %s\n", nickname);
 		printf("SERVER IP: %s\n", sip);
 		printf("CLIENTE IP: %s\n", cip);
+		printf("test\n");
 		
 
 		json_object *juser = json_object_new_object();
@@ -66,16 +67,17 @@ int main(int argc, char* argv[]) {
 		hand = json_object_to_json_string(juser);
 		send(sock, hand, strlen(hand),0);
 		
-		bind(sock, (struct sockaddr *)&serv, sizeof(serv));
-		listen(sock,10);
-		
-		if(conn = accept(sock, (struct sockaddr *)NULL, NULL)){
+		handshake = 0;
+		strcpy(message,empty);
+		while(handshake == 0){
+			recv(sock, message, sizeof(message),0);
 			printf("ESPERANDO CONEXION\n");
-			recv(conn,message,100,0);
 			printf("HANDSHAKE:%s\n", message);
-			while(recv(conn,message,100,0)>0){
-					printf("HANDSHAKE:%s\n", message);
-				}
+			printf("CONEXION EXITOSA\n");
+			if(message>0){
+				handshake=1;
+			}
+			strcpy(message,empty);
 			}
 	}else{
 		printf("CONEXION FALLIDA\n");
@@ -104,6 +106,7 @@ int main(int argc, char* argv[]) {
 			scanf("%s",dest);
 			while(1){
 			printf("INGRESE MENSAJE: ");
+			strcpy(message,empty);
 			scanf(" %[^\n]s",message);
 			json_object *jAction = json_object_new_string("SEND_MESSAGE");
 			json_object *jUser = json_object_new_string(nickname);
@@ -115,7 +118,8 @@ int main(int argc, char* argv[]) {
 			json_object_object_add(jobj,"message",jMessage);
 			const char *theMessage;
 			theMessage = json_object_to_json_string(jobj);
-			send(sock, theMessage, strlen(theMessage),0);
+			send(sock, theMessage, sizeof(theMessage),0);
+			strcpy(message,empty);
 			}			
 			break;
 			
@@ -157,8 +161,8 @@ int main(int argc, char* argv[]) {
 			
 			json_object_object_add(jstatus,"action",jAction3);
 			json_object_object_add(juser,"id",jId);
-			json_object_object_add(juser,"id",jName);
-			json_object_object_add(juser,"id",jStatus);
+			json_object_object_add(juser,"name",jName);
+			json_object_object_add(juser,"status",jStatus);
   		  	json_object_object_add(jstatus,"user",juser);
 			
 			const char *change;
@@ -174,7 +178,19 @@ int main(int argc, char* argv[]) {
 			printf("\nSALIR %c\n",5);
 			const char *bye;
 			bye = "BYE";
-			send(sock, bye, strlen(bye),0);
+			send(sock, bye, sizeof(bye),0);
+			
+			handshake = 0;
+			strcpy(message,empty);
+			while(handshake == 0){
+				printf("CLIENTE DICE:%s\n", bye);
+				recv(sock, message, sizeof(message),0);
+				printf("SERVER DICE:%s\n", message);
+				if(message>0){
+					handshake=1;
+				}
+				strcpy(message,empty);
+				}
 			exit(0);
 			
 			default:
