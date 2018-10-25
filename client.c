@@ -228,52 +228,55 @@ int main(int argc, char* argv[]) {
 				bzero(message, 100);
 			}
 			
-			printf("\nBUSCAR USUARIO \n",2);
-			json_object *jbus = json_object_new_object();
-			char user[50];
-			printf("INGRESE ID DE USUARIO: ");
-			scanf("%s",user);
+			printf("\nBUSCAR USUARIO? Y/N\n",2);
+			char buser[5];
+			scanf("%s",buser);
+			if(!strcmp(buser, "y")) {
+				json_object *jbus = json_object_new_object();
+				char user[50];
+				printf("INGRESE ID DE USUARIO: ");
+				scanf("%s",user);
 
-			json_object *jUser = json_object_new_string(user);
+				json_object *jUser = json_object_new_string(user);
 
-			json_object_object_add(jbus,"action",jAction2);
-			json_object_object_add(jbus,"user",jUser);
+				json_object_object_add(jbus,"action",jAction2);
+				json_object_object_add(jbus,"user",jUser);
 
-			const char *bus;
-			bus = json_object_to_json_string(jbus);
-			send(sock, bus, sizeof(bus),0);
+				const char *bus;
+				bus = json_object_to_json_string(jbus);
+				send(sock, bus, sizeof(bus),0);
 			
-			handshake = 0;
-			bzero(message, 100);
-			while(handshake == 0){
-				printf("ESPERANDO USUARIO...\n");
-				recv(sock, message, strlen(message),0);
-				printf("^^ %s\n", message);
-				json_object *j1users = json_tokener_parse(message);
-				json_object *j1user;
-				json_object *j1id;
-				json_object *j1name;
-				json_object *j1status;
-				json_object_object_get_ex(j1users,"users",&j1user);
-				json_object_object_get_ex(j1user,"id",&j1id);
-				json_object_object_get_ex(j1user,"name",&j1name);
-				json_object_object_get_ex(j1user,"status",&j1status);
-				const char *id1 = json_object_get_string(j1id);
-				const char *name1 = json_object_get_string(j1name);
-				const char *status1 = json_object_get_string(j1status);
-				
-				
-				printf("INFO USUARIO: %s\n", name1);
-				printf("ID: %s\n", id1);
-				printf("STATUS: %s\n", status1);
-				printf("\n\n");
-				
-				if(message>0){
-					handshake=1;
-				}
+				handshake = 0;
 				bzero(message, 100);
+				while(handshake == 0){
+					printf("ESPERANDO USUARIO...\n");
+					recv(sock, message, strlen(message),0);
+					printf("^^ %s\n", message);
+					json_object *j1users = json_tokener_parse(message);
+					json_object *j1user;
+					json_object *j1id;
+					json_object *j1name;
+					json_object *j1status;
+					json_object_object_get_ex(j1users,"users",&j1user);
+					json_object_object_get_ex(j1user,"id",&j1id);
+					json_object_object_get_ex(j1user,"name",&j1name);
+					json_object_object_get_ex(j1user,"status",&j1status);
+					const char *id1 = json_object_get_string(j1id);
+					const char *name1 = json_object_get_string(j1name);
+					const char *status1 = json_object_get_string(j1status);
+				
+				
+					printf("INFO USUARIO: %s\n", name1);
+					printf("ID: %s\n", id1);
+					printf("STATUS: %s\n", status1);
+					printf("\n\n");
+				
+					if(message>0){
+						handshake=1;
+					}
+					bzero(message, 100);
+				}
 			}
-			
 			break;
 			
 			case 3:
@@ -281,7 +284,7 @@ int main(int argc, char* argv[]) {
 			
 			json_object *jstatus = json_object_new_object();
 			json_object *jAction3 = json_object_new_string("CHANGE_STATUS");
-			json_object *jId = json_object_new_string(id);
+			json_object *jId = json_object_new_string(nickname);
 			
 			int status=0;
 			char *st = "active";
