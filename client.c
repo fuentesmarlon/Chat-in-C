@@ -19,65 +19,69 @@ pthread_t thread;
 struct sockaddr_in serv;
 int sock;
 int conn, con;
-char message[100]="";
+char message[2024]="";
 int handshake = 0;
 int fd;
 struct ifreq ifr;
-char empty[100] = "";
+char empty[2024] = "";
+int e = 1;
 
 void * listening(){
 	char meServer[1024];
 	int resp;
+	json_object *jChecker;
+	json_object *action;
+	const char *accion;
+	
+	json_object *from;
+	json_object *messageJ;
+	
+	json_object *jReceive;
+	const char *fromName;
+	const char *meString;
+	
+	json_object *users;
+	json_object *jList;
+	const char *listUsers;
+	
+	json_object *user;
+	json_object *jStatus;
+	const char *changedStatus;
+	
 	while(1){
 		bzero(meServer, 1024);
-		resp = recv(fd,meServer,1024,0);
-		if(resp<=0){
+		resp = recv(sock,meServer,1024,0);
+		jChecker = json_tokener_parse(meServer);
+		json_object_object_get_ex(jChecker,"action",&action);
+		accion = json_object_get_string(action);
 			
-		}else{
-			json_object *jChecker = json_tokener_parse(meServer);
-			json_object *action;
-			json_object_object_get_ex(jChecker,"action",&action);
-			const char *accion = json_object_get_string(action);
-			
-			if(accion=="RECEIVE_MESSAGE"){
-				json_object *from;
-				json_object *messageJ;
-				json_object *jReceive =json_tokener_parse(meServer);
-				json_object_object_get_ex(jReceive,"from",&from);
-				json_object_object_get_ex(jReceive,"message",&messageJ);
-				const char *fromName = json_object_get_string(from);
-				const char *meString = json_object_get_string(messageJ);
-				printf("MENSAJE DE: %s\n",fromName);
-				printf("MENSAJE: %s\n",meString);		
+		if(accion=="RECEIVE_MESSAGE"){
+			jReceive =json_tokener_parse(meServer);
+			json_object_object_get_ex(jReceive,"from",&from);
+			json_object_object_get_ex(jReceive,"message",&messageJ);
+			fromName = json_object_get_string(from);
+			meString = json_object_get_string(messageJ);
+			printf("MENSAJE DE: %s\n",fromName);
+			printf("MENSAJE: %s\n",meString);		
 
-			}if(accion=="LIST_USER"){
-				json_object *users;
-				json_object *jList = json_tokener_parse(meServer);
-				json_object_object_get_ex(jList,"users",&users);
-				const char *listUsers = json_object_get_string(jList);
-				printf("LISTA DE USUARIOS: %s",listUsers);
+		}if(accion=="LIST_USER"){
+			jList = json_tokener_parse(meServer);
+			json_object_object_get_ex(jList,"users",&users);
+			const char *listUsers = json_object_get_string(jList);
+			printf("LISTA DE USUARIOS: %s",listUsers);
 
-			}if(accion=="CHANGED_STATUS"){
-				json_object *user;
-				json_object *jStatus = json_tokener_parse(meServer);
-				json_object_object_get_ex(jStatus,"user",&user);
-				const char *changedStatus = json_object_get_string(jStatus);
-				printf("STATUS CAMBIO A: %s",changedStatus);
+		}if(accion=="CHANGED_STATUS"){
+			json_object *jStatus = json_tokener_parse(meServer);
+			json_object_object_get_ex(jStatus,"user",&user);
+			changedStatus = json_object_get_string(jStatus);
+			printf("STATUS CAMBIO A: %s",changedStatus);
 
-			}if(accion=="USER_DISCONNECTED"){
-				json_object *user;
-				json_object *jStatus = json_tokener_parse(meServer);
-				json_object_object_get_ex(jStatus,"user",&user);
-				const char *changedStatus = json_object_get_string(jStatus);
-				printf("STATUS CAMBIO A: %s",changedStatus);
-				
-
-			}else{
-				printf("ACTION ERROR");
-			}
-
+		}if(accion=="USER_DISCONNECTED"){
+			jStatus = json_tokener_parse(meServer);
+			json_object_object_get_ex(jStatus,"user",&user);
+			changedStatus = json_object_get_string(jStatus);
+			printf("STATUS CAMBIO A: %s",changedStatus);
 		}
-
 	}
 }
 
@@ -123,10 +127,11 @@ int main(int argc, char* argv[]) {
 		
 		const char *hand;
 		hand = json_object_to_json_string(juser);
+		printf("CLIENTE DICE: %s\n", hand);
 		send(sock, hand, strlen(hand),0);
 		
 		handshake = 0;
-		bzero(message, 100);
+		bzero(message, 2024);
 		while(handshake == 0){
 			recv(sock, message, sizeof(message),0);
 			printf("ESPERANDO CONEXION\n\n");
@@ -157,7 +162,7 @@ int main(int argc, char* argv[]) {
 			if(message>0){
 				handshake=1;
 			}
-			bzero(message, 100);
+			bzero(message, 2024);
 			}
 	}else{
 		printf("CONEXION FALLIDA\n\n");
@@ -180,27 +185,32 @@ int main(int argc, char* argv[]) {
  
 		switch(choice){
 			case 1:
+			e = 1;
 			printf("\nCHAT \n",1);
 			json_object *jobj = json_object_new_object();
 			char dest[50];
 			printf("INGRESE DESTINATARIO: ");
 			scanf("%s",dest);
-			while(1){
-			printf("INGRESE MENSAJE: ");
-			bzero(message, 100);
-			scanf(" %[^\n]s",message);
-			json_object *jAction = json_object_new_string("SEND_MESSAGE");
-			json_object *jUser = json_object_new_string(nickname);
-			json_object *jDest = json_object_new_string(dest);
-			json_object *jMessage = json_object_new_string(message);
-			json_object_object_add(jobj,"action",jAction);
-			json_object_object_add(jobj,"from",jUser);
-			json_object_object_add(jobj,"to",jDest);
-			json_object_object_add(jobj,"message",jMessage);
-			const char *theMessage;
-			theMessage = json_object_to_json_string(jobj);
-			send(sock, theMessage, sizeof(theMessage),0);
- 		    bzero(message, 100);
+			while(e == 1){
+				printf("INGRESE MENSAJE: ");
+				bzero(message, 2024);
+				scanf(" %[^\n]s",message);
+				if(!strcmp(message, "exit")){
+					e = 0;
+				}
+				json_object *jAction = json_object_new_string("SEND_MESSAGE");
+				json_object *jUser = json_object_new_string(nickname);
+				json_object *jDest = json_object_new_string(dest);
+				json_object *jMessage = json_object_new_string(message);
+				json_object_object_add(jobj,"action",jAction);
+				json_object_object_add(jobj,"from",jUser);
+				json_object_object_add(jobj,"to",jDest);
+				json_object_object_add(jobj,"message",jMessage);
+				const char *theMessage;
+				theMessage = json_object_to_json_string(jobj);
+				printf("CLIENTE DICE: %s\n", theMessage);
+				send(sock, theMessage, strlen(theMessage),0);
+				bzero(message, 2024);
 			}			
 			break;
 			
@@ -213,25 +223,26 @@ int main(int argc, char* argv[]) {
 			const char *listar;
 			
 			listar = json_object_to_json_string(jlist);
+			printf("CLIENTE DICE: %s\n", listar);
 			send(sock, listar, strlen(listar),0);
-			
+						
 			handshake = 0;
-			bzero(message, 100);
+			bzero(message, 2024);
 			while(handshake == 0){
 				printf("\nESPERANDO LISTA...\n");
-				recv(sock, message, sizeof(message),0);
+				recv(sock, message, strlen(message),0);
 				printf("LISTA: %s\n", message);
 				
 				if(message>0){
 					handshake=1;
 				}
-				bzero(message, 100);
+				bzero(message, 2024);
 			}
 			
 			printf("\nBUSCAR USUARIO? Y/N\n",2);
 			char buser[5];
 			scanf("%s",buser);
-			if(!strcmp(buser, "y")) {
+			if(!strcmp(buser, "y")){
 				json_object *jbus = json_object_new_object();
 				char user[50];
 				printf("INGRESE ID DE USUARIO: ");
@@ -244,10 +255,11 @@ int main(int argc, char* argv[]) {
 
 				const char *bus;
 				bus = json_object_to_json_string(jbus);
-				send(sock, bus, sizeof(bus),0);
+				printf("CLIENTE DICE: %s\n", bus);
+				send(sock, bus, strlen(bus),0);
 			
 				handshake = 0;
-				bzero(message, 100);
+				bzero(message, 2024);
 				while(handshake == 0){
 					printf("ESPERANDO USUARIO...\n");
 					recv(sock, message, strlen(message),0);
@@ -274,7 +286,7 @@ int main(int argc, char* argv[]) {
 					if(message>0){
 						handshake=1;
 					}
-					bzero(message, 100);
+					bzero(message, 2024);
 				}
 			}
 			break;
@@ -284,7 +296,7 @@ int main(int argc, char* argv[]) {
 			
 			json_object *jstatus = json_object_new_object();
 			json_object *jAction3 = json_object_new_string("CHANGE_STATUS");
-			json_object *jId = json_object_new_string(nickname);
+			json_object *jId = json_object_new_string(id);
 			
 			int status=0;
 			char *st = "active";
@@ -326,6 +338,7 @@ int main(int argc, char* argv[]) {
 			
 			const char *change;
 			change = json_object_to_json_string(jstatus);
+			printf("CLIENTE DICE: %s\n", change);
 			send(sock, change, strlen(change),0);
 			break;
 			
@@ -347,7 +360,7 @@ int main(int argc, char* argv[]) {
 			send(sock, bye, sizeof(bye),0);
 			
 			handshake = 0;
-			bzero(message, 100);
+			bzero(message, 2024);
 			while(handshake == 0){
 				printf("CLIENTE DICE: %s\n", bye);
 				recv(sock, message, sizeof(message),0);
@@ -355,7 +368,7 @@ int main(int argc, char* argv[]) {
 				if(message>0){
 					handshake=1;
 				}
-				bzero(message, 100);
+				bzero(message, 2024);
 				}
 			exit(0);
 			
