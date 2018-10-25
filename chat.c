@@ -162,7 +162,6 @@ int agregarUsuario(char *origin, char *nombre, int socket){
 	json_object_object_add(reply,"status",ok);
 	json_object_object_add(reply,"user",user);
 	printf("%s\n",json_object_get_string(reply));
-	printf("%d\n",socket);
 	send(socket, json_object_get_string(reply),100,0);
 	printf("se envio la data (supuestamente)\n");
 	numUsers++;
