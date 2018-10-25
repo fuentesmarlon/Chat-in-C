@@ -50,8 +50,7 @@ int main(int argc, char* argv[]) {
 		printf("INGRESADO COMO USUARIO: %s\n", nickname);
 		printf("SERVER IP: %s\n", sip);
 		printf("CLIENTE IP: %s\n", cip);
-		printf("test\n");
-		
+
 
 		json_object *juser = json_object_new_object();
 
@@ -68,7 +67,7 @@ int main(int argc, char* argv[]) {
 		send(sock, hand, strlen(hand),0);
 		
 		handshake = 0;
-		strcpy(message,empty);
+		bzero(message, 100);
 		while(handshake == 0){
 			recv(sock, message, sizeof(message),0);
 			printf("ESPERANDO CONEXION\n");
@@ -77,7 +76,7 @@ int main(int argc, char* argv[]) {
 			if(message>0){
 				handshake=1;
 			}
-			strcpy(message,empty);
+			bzero(message, 100);
 			}
 	}else{
 		printf("CONEXION FALLIDA\n");
@@ -99,14 +98,14 @@ int main(int argc, char* argv[]) {
  
 		switch(choice){
 			case 1:
-			printf("\nCHAT %c\n",1);
+			printf("\nCHAT \n",1);
 			json_object *jobj = json_object_new_object();
 			char dest[50];
 			printf("INGRESE DESTINATARIO: ");
 			scanf("%s",dest);
 			while(1){
 			printf("INGRESE MENSAJE: ");
-			strcpy(message,empty);
+			bzero(message, 100);
 			scanf(" %[^\n]s",message);
 			json_object *jAction = json_object_new_string("SEND_MESSAGE");
 			json_object *jUser = json_object_new_string(nickname);
@@ -119,22 +118,34 @@ int main(int argc, char* argv[]) {
 			const char *theMessage;
 			theMessage = json_object_to_json_string(jobj);
 			send(sock, theMessage, sizeof(theMessage),0);
-			strcpy(message,empty);
+ 		    bzero(message, 100);
 			}			
 			break;
 			
 			case 2:
-			printf("\nLISTA DE USUARIOS %c\n",2);
+			printf("\nLISTA DE USUARIOS \n", 2);
 			
 			json_object *jlist = json_object_new_object();
 			json_object *jAction2 = json_object_new_string("LIST_USER");
 			json_object_object_add(jlist,"action",jAction2);
-			
 			const char *listar;
+
 			listar = json_object_to_json_string(jlist);
 			send(sock, listar, strlen(listar),0);
 			
-			printf("\nBUSCAR USUARIO %c\n",2);
+			handshake = 0;
+			bzero(message, 100);
+			while(handshake == 0){
+				printf("ESPERANDO LISTA...");
+				recv(sock, message, sizeof(message),0);
+				printf("LISTA: %s\n", message);
+				if(message>0){
+					handshake=1;
+				}
+				bzero(message, 100);
+			}
+			
+			printf("\nBUSCAR USUARIO \n",2);
 			json_object *jbus = json_object_new_object();
 			char user[50];
 			printf("INGRESE USUARIO: ");
@@ -151,45 +162,76 @@ int main(int argc, char* argv[]) {
 			break;
 			
 			case 3:
-			printf("\nCAMBIAR STATUS %c\n",3);
+			printf("\nCAMBIAR STATUS \n",3);
+			
 			json_object *jstatus = json_object_new_object();
-			json_object *juser = json_object_new_object();
 			json_object *jAction3 = json_object_new_string("CHANGE_STATUS");
 			json_object *jId = json_object_new_string(nickname);
-			json_object *jName = json_object_new_string(nickname);
-			json_object *jStatus = json_object_new_string("busy");
+			
+			int status=0;
+			char *st = "active";
+			while(status!=4){
+				printf("\n\t------------------------------");
+				printf("\n\n\t 1. ACTIVE");
+				printf("\n\t 2. BUSY");
+				printf("\n\t 3. INACTIVE");
+				printf("\n\n INGRESE UNA OPCION: ");
+				scanf("%d", &status);
+				switch(status){
+					case 1:
+					st = "active";
+					status=4;
+					break;
+					
+					case 2:
+					st = "busy";
+					status=4;
+					break;
+					
+					case 3:
+					st = "inactive";
+					status=4;
+					break;
+					
+					default:
+					printf("\nOPCION INVALIDA\n");
+					status=0;
+					break;
+				}
+			}
+			
+			json_object *jStatus = json_object_new_string(st);
 			
 			json_object_object_add(jstatus,"action",jAction3);
-			json_object_object_add(juser,"id",jId);
-			json_object_object_add(juser,"name",jName);
-			json_object_object_add(juser,"status",jStatus);
-  		  	json_object_object_add(jstatus,"user",juser);
+			json_object_object_add(jstatus,"user",jId);
+  		  	json_object_object_add(jstatus,"status",jStatus);
 			
 			const char *change;
 			change = json_object_to_json_string(jstatus);
 			send(sock, change, strlen(change),0);
+			
 			break;
 			
 			case 4:
-			printf("\nAYUDA %c\n",4);
+			printf("\nAYUDA \n",4);
 			break;
 			
 			case 5:
-			printf("\nSALIR %c\n",5);
+			printf("\nSALIR \n",5);
 			const char *bye;
 			bye = "BYE";
 			send(sock, bye, sizeof(bye),0);
 			
 			handshake = 0;
-			strcpy(message,empty);
+			bzero(message, 100);
 			while(handshake == 0){
-				printf("CLIENTE DICE:%s\n", bye);
+				printf("CLIENTE DICE: %s\n", bye);
 				recv(sock, message, sizeof(message),0);
-				printf("SERVER DICE:%s\n", message);
+				printf("SERVER DICE: %s\n", message);
 				if(message>0){
 					handshake=1;
 				}
-				strcpy(message,empty);
+				bzero(message, 100);
 				}
 			exit(0);
 			
@@ -199,5 +241,6 @@ int main(int argc, char* argv[]) {
 			break;
 		}
 	}
-
 }
+
+
